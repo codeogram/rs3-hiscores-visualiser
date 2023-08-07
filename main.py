@@ -72,7 +72,7 @@ def scrape(skills_for_scraping) -> str:
     }
     table_size = 50
     for skill in skills_for_scraping:
-        url = f"https://secure.runescape.com/m=hiscore/ranking.json?table={skill.get('table')}&category=28&size={table_size}"
+        url = f"https://secure.runescape.com/m=hiscore/ranking.json?table={skill.get('table')}&category=0&size={table_size}"
         print(url)
         try:
             response = requests.get(url)
