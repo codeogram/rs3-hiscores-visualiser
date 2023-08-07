@@ -28,7 +28,7 @@ my_logger = MyLogger(
 
 
 def parse_args() -> tuple[int, list]:
-    """ Parse args to return the scrape interval (in minutes) and list of skills to be scraped"""
+    """ Parse args to return the scrape interval (in seconds) and list of skills to be scraped"""
     len_args = len(sys.argv)
     if len_args < 2:
         sys.exit(f"Usage: python {file_stem}.py <scrape_interval_in_mins> [specified_skills]")
@@ -38,8 +38,8 @@ def parse_args() -> tuple[int, list]:
     except ValueError as err:
         sys.exit(f"<scrape_interval> has to be an integer.")
     else:
-        if scrape_interval < 3 or scrape_interval > 1000:
-            sys.exit(f"<scrape_interval> has to be an integer between 3 and 1000 (minutes).")
+        if scrape_interval < 10 or scrape_interval > 10000:
+            sys.exit(f"<scrape_interval> has to be an integer between 10 and 10,000 (seconds).")
 
     if len_args == 2:
         skills = ["overall"]
@@ -109,7 +109,7 @@ def main():
         my_logger.logger.debug(f"data saved: {raw_data_file_path}") # log the file path to which the data was saved
 
     # schedule the scraping
-    schedule.every(scrape_interval).minutes.do(do_scrape)
+    schedule.every(scrape_interval).seconds.do(do_scrape)
     schedule.run_pending()
     while True:
         schedule.run_pending()
