@@ -27,53 +27,66 @@ my_logger = MyLogger(
 )
 
 
-# determining which skill to scrape
-if len(sys.argv) < 2:
-    skills = ["overall"]
-else:
-    skills = sys.argv[1:] # scrape all the mentioned skills
-
-
-# determine each skill's table number
-skills_for_scraping = []
-with open(SKILLS_JSON_PATH, "r", encoding="utf-8") as f:
-    json_data = f.read()
-    skill_data = json.loads(json_data)
-    
-    for skill_info in skill_data:
-        if skill_info.get("skill") in skills:
-            skills_for_scraping.append(skill_info)
-# print(skills_for_scraping)
-my_logger.logger.debug(skills_for_scraping)
-
-
-# scrape the hiscores, along with the timestamp
-timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-print(timestamp)
-raw_data = {
-    "timestamp": timestamp,
-    "data": []
-}
-table_size = 50
-for skill in skills_for_scraping:
-    url = f"https://secure.runescape.com/m=hiscore/ranking.json?table={skill.get('table')}&category=28&size={table_size}"
-    print(url)
-    try:
-        response = requests.get(url)
-    except requests.exceptions.ConnectionError as err:
-        my_logger.logger.error(err)
+def get_skills() -> list:
+    # determining which skill to scrape
+    if len(sys.argv) < 2:
+        skills = ["overall"]
     else:
-        if response.ok:
-            my_logger.logger.debug(f"{response.status_code}: {url}")
-            response_data = json.dumps(response.json())
-        else:
-            my_logger.logger.error(f"{response.status_code}: {url}")
-            response_data = None
-        raw_data["data"].append(response_data)
-        
+        skills = sys.argv[1:] # scrape all the mentioned skills
 
-# save data to disk
-timestamp_for_file_name = timestamp.replace(" ", "_").replace(":", "_")
-raw_data_file_path = os.path.join(RAW_DATA_DIR, f"raw_data_{timestamp_for_file_name}.json")
-with open(raw_data_file_path, "w", encoding="utf-8") as f:
-    json.dump(raw_data, f, indent=4)
+    # determine each skill's table number
+    skills_for_scraping = []
+    with open(SKILLS_JSON_PATH, "r", encoding="utf-8") as f:
+        json_data = f.read()
+        skill_data = json.loads(json_data)
+        for skill_info in skill_data:
+            if skill_info.get("skill") in skills:
+                skills_for_scraping.append(skill_info)
+
+    my_logger.logger.debug(skills_for_scraping)
+    return skills_for_scraping
+
+
+def scrape(skills_for_scraping) -> str:
+
+    # scrape the hiscores, along with the timestamp
+    timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    print(timestamp)
+    raw_data = {
+        "timestamp": timestamp,
+        "data": []
+    }
+    table_size = 50
+    for skill in skills_for_scraping:
+        url = f"https://secure.runescape.com/m=hiscore/ranking.json?table={skill.get('table')}&category=28&size={table_size}"
+        print(url)
+        try:
+            response = requests.get(url)
+        except requests.exceptions.ConnectionError as err:
+            my_logger.logger.error(err)
+        else:
+            if response.ok:
+                my_logger.logger.debug(f"{response.status_code}: {url}")
+                response_data = json.dumps(response.json())
+            else:
+                my_logger.logger.error(f"{response.status_code}: {url}")
+                response_data = None
+            raw_data["data"].append(response_data)
+            
+
+    # save data to disk
+    timestamp_for_file_name = timestamp.replace(" ", "_").replace(":", "_")
+    raw_data_file_path = os.path.join(RAW_DATA_DIR, f"raw_data_{timestamp_for_file_name}.json")
+    with open(raw_data_file_path, "w", encoding="utf-8") as f:
+        json.dump(raw_data, f, indent=4)
+    return raw_data_file_path
+
+
+def main():
+    skills_for_scraping = get_skills() # retrieve the skills that need to be scraped (from the command line)
+    raw_data_file_path = scrape(skills_for_scraping) # scrape the skills, save to file, and return the file path
+    my_logger.logger.debug(f"data saved: {raw_data_file_path}") # log the file path to which the data was saved
+
+
+if __name__ == "__main__":
+    main()
