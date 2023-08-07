@@ -85,7 +85,10 @@ def scrape(skills_for_scraping) -> str:
             else:
                 my_logger.logger.error(f"{response.status_code}: {url}")
                 response_data = None
-            raw_data["data"].append(response_data)
+            raw_data["data"].append({
+                "skill": skill,
+                "skill_data": response_data
+            })
             
     # save data to disk
     timestamp_for_file_name = timestamp.replace(" ", "_").replace(":", "_")
