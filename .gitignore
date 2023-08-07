@@ -162,4 +162,5 @@ cython_debug/
 # VSCode
 **/.vscode/
 
-admin/
+# my stuff
+TEST_*
