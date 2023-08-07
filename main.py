@@ -106,12 +106,12 @@ def main():
         my_logger.logger.debug(f"data saved: {raw_data_file_path}") # log the file path to which the data was saved
 
     # schedule the scraping
-    schedule.every(scrape_interval).seconds.do(do_scrape)
+    schedule.every(scrape_interval).minutes.do(do_scrape)
     schedule.run_pending()
     while True:
         schedule.run_pending()
         time.sleep(1)
-        
+
 
 if __name__ == "__main__":
     main()
