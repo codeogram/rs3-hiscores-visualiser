@@ -27,14 +27,30 @@ my_logger = MyLogger(
 )
 
 
-def get_skills() -> list:
-    # determining which skill to scrape
-    if len(sys.argv) < 2:
+def parse_args() -> tuple[int, list]:
+    """ Parse args to return the scrape interval (in minutes) and list of skills to be scraped"""
+    len_args = len(sys.argv)
+    if len_args < 2:
+        sys.exit(f"Usage: python {file_stem}.py <scrape_interval_in_mins> [specified_skills]")
+        
+    try:
+        scrape_interval = int(sys.argv[1])
+    except ValueError as err:
+        sys.exit(f"<scrape_interval> has to be an integer.")
+    else:
+        if scrape_interval < 3 or scrape_interval > 1000:
+            sys.exit(f"<scrape_interval> has to be an integer between 3 and 1000 (minutes).")
+
+    if len_args == 2:
         skills = ["overall"]
     else:
-        skills = sys.argv[1:] # scrape all the mentioned skills
+        skills = sys.argv[2:] # scrape all the mentioned skills
 
-    # determine each skill's table number
+    return (scrape_interval, skills)
+
+
+def get_skills_for_scraping(skills) -> list:
+    """ Compare the list of skills provided with the skills in the json file, to return the relevant skill data to be used for scraping """
     skills_for_scraping = []
     with open(SKILLS_JSON_PATH, "r", encoding="utf-8") as f:
         json_data = f.read()
@@ -48,10 +64,8 @@ def get_skills() -> list:
 
 
 def scrape(skills_for_scraping) -> str:
-
-    # scrape the hiscores, along with the timestamp
+    """ Scrape the hiscores, for the skills in skills_for_scraping, and save the raw data to disk """
     timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    print(timestamp)
     raw_data = {
         "timestamp": timestamp,
         "data": []
@@ -73,7 +87,6 @@ def scrape(skills_for_scraping) -> str:
                 response_data = None
             raw_data["data"].append(response_data)
             
-
     # save data to disk
     timestamp_for_file_name = timestamp.replace(" ", "_").replace(":", "_")
     raw_data_file_path = os.path.join(RAW_DATA_DIR, f"raw_data_{timestamp_for_file_name}.json")
@@ -83,7 +96,9 @@ def scrape(skills_for_scraping) -> str:
 
 
 def main():
-    skills_for_scraping = get_skills() # retrieve the skills that need to be scraped (from the command line)
+    scrape_interval, skills = parse_args()
+    # TODO - schedule the code below to run every <scrape_interval> minutes
+    skills_for_scraping = get_skills_for_scraping(skills) # retrieve the skills that need to be scraped (from the command line)
     raw_data_file_path = scrape(skills_for_scraping) # scrape the skills, save to file, and return the file path
     my_logger.logger.debug(f"data saved: {raw_data_file_path}") # log the file path to which the data was saved
 
