@@ -97,11 +97,21 @@ def scrape(skills_for_scraping) -> str:
 
 def main():
     scrape_interval, skills = parse_args()
-    # TODO - schedule the code below to run every <scrape_interval> minutes
     skills_for_scraping = get_skills_for_scraping(skills) # retrieve the skills that need to be scraped (from the command line)
-    raw_data_file_path = scrape(skills_for_scraping) # scrape the skills, save to file, and return the file path
-    my_logger.logger.debug(f"data saved: {raw_data_file_path}") # log the file path to which the data was saved
 
+    import schedule
+    import time
+    def do_scrape():
+        raw_data_file_path = scrape(skills_for_scraping) # scrape the skills, save to file, and return the file path
+        my_logger.logger.debug(f"data saved: {raw_data_file_path}") # log the file path to which the data was saved
+
+    # schedule the scraping
+    schedule.every(scrape_interval).seconds.do(do_scrape)
+    schedule.run_pending()
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+        
 
 if __name__ == "__main__":
     main()
