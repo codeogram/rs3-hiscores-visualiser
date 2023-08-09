@@ -1,14 +1,13 @@
 import json
 import os
-import sys
-import datetime
-import pprint
 
-RAW_DATA_PATH = "TEST_raw_data_scraped"
+RAW_DATA_PATH = "TEST_raw_scraped_data2"
 
 # loading raw_data into memory
 all_file_data = []
 for file_name in os.listdir(RAW_DATA_PATH):
+    if file_name == ".gitignore":
+        continue
     # extract file contents
     full_file_path = os.path.join(os.path.dirname(__file__), RAW_DATA_PATH, file_name) # absolute path to the json file
     with open(full_file_path, "r", encoding="utf-8") as f:
