@@ -1,20 +1,24 @@
 import json
 import os
+import sys
 
-RAW_DATA_PATH = "TEST_raw_scraped_data2"
+RAW_DATA_DIR_PATH = "TEST_raw_scraped_data2"
 
-# loading raw_data into memory
-all_file_data = []
-for file_name in os.listdir(RAW_DATA_PATH):
-    if file_name == ".gitignore":
-        continue
-    # extract file contents
-    full_file_path = os.path.join(os.path.dirname(__file__), RAW_DATA_PATH, file_name) # absolute path to the json file
+
+def get_full_file_path(raw_data_dir_path, file_name):
+    return os.path.join(os.path.dirname(__file__), raw_data_dir_path, file_name) # absolute path to the json file
+
+
+def get_data_from_json_file(full_file_path) -> dict|None:
+    if ".json" not in os.path.basename(full_file_path):
+        return
     with open(full_file_path, "r", encoding="utf-8") as f:
         file_content = f.read()
         file_content_dict = json.loads(file_content)
+    return file_content_dict
 
-    # organise hiscores data by skill
+
+def organise_dict_data(file_content_dict):    
     if file_content_dict["data"]: # if not an empty list
         hiscores_data = {}
         for hiscores_item in file_content_dict["data"]:
@@ -23,21 +27,38 @@ for file_name in os.listdir(RAW_DATA_PATH):
             hiscores_data[skill_name] = skill_data
     else:
         hiscores_data = {}
-
-    # append all the data corresponding to this timestamp, to all_file_data
+    # append all the data corresponding to this timestamp, to all_organised_data
     file_data = {
         "timestamp": file_content_dict["timestamp"],
         "hiscores": hiscores_data
     }
-    all_file_data.append(file_data)
+    return file_data
 
 
-all_file_data = sorted(all_file_data, key=lambda file_data: file_data["timestamp"])
-for item in all_file_data:
-    # pprint.pprint(item) # for pretty printing of the dictionaries
-    print(item)
-    print()
-    print()
+def sort_all_data_by_date(all_file_data):
+    return sorted(all_file_data, key=lambda file_data: file_data["timestamp"])
+
+
+def main():
+    all_file_data = []
+    for file_name in os.listdir(RAW_DATA_DIR_PATH):
+        if ".json" not in file_name:
+            continue
+        full_file_path = get_full_file_path(raw_data_dir_path=RAW_DATA_DIR_PATH, file_name=file_name)
+        data_dict = get_data_from_json_file(full_file_path)
+        data_dict_organised = organise_dict_data(data_dict) if data_dict else data_dict
+        all_file_data.append(data_dict_organised)
+    all_sorted_data = sort_all_data_by_date(all_file_data)
+
+    for item in all_sorted_data:
+        print(item)
+        print()
+        print()
+    print(len(all_sorted_data))
+
+if __name__ == "__main__":
+    main()
+    
 
 
 """
