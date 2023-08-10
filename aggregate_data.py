@@ -30,7 +30,8 @@ def get_data_from_json_file(full_file_path) -> dict|None:
     return file_content_dict
 
 
-def organise_dict_data(file_content_dict):    
+def organise_dict_data(file_content_dict):
+    # TODO - remove bug abusers (by name) from the data
     if file_content_dict["data"]: # if not an empty list
         hiscores_data = {}
         for hiscores_item in file_content_dict["data"]:
@@ -189,8 +190,8 @@ def create_bar_race(df, bars_visible):
         steps_per_period=30, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
         filter_column_colors=True,
         shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black'},
-        bar_label_size=20,
-        tick_label_size=20,
+        bar_label_size=18,
+        tick_label_size=22,
         period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
         period_fmt='%Y-%m-%d -- %I:%M %p',
         # period_summary_func=lambda v, r: {
@@ -243,7 +244,7 @@ def main():
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
     # player_image_dir = scrape_player_images(unique_users_per_skill, "necromancy")
-    bars_visible = 10
+    bars_visible = 16
     df = create_df(
         data=all_sorted_data,
         unique_users_per_skill=unique_users_per_skill,
