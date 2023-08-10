@@ -178,9 +178,8 @@ def create_bar_race(df, bars_visible):
         return level
 
     def period_summary(values, ranks):
-        highest_xp = values.nlargest(1).values[0]
+        highest_xp = int(values.nlargest(1).values[0])
         highest_level = get_level_from_xp(highest_xp)
-        sum_of_visible_xp = f"{values.nlargest(bars_visible).sum():,.0f}"
         return {
             'x': .98,
             'y': .12,
@@ -188,10 +187,12 @@ def create_bar_race(df, bars_visible):
             'va': 'center',
             'size': '30',
             'color': 'mediumblue',
-            's': f"""Highest Level: {highest_level}
-                    Highest XP: {highest_xp}"""
+            's': f"""Current Leader: {ranks[0]}
+            Current Leader: {values.nlargest(1)[0]}
+            Current Leader: {values.nlargest(1)[0].column}
+            Current Leader: {values.nlargest(1)[0].index}
+                    Leader Level: {highest_level}"""
         }
-
 
     time_now = datetime.strftime(datetime.now(), "%Y-%m-%d_%H_%M_%S")
     bcr.bar_chart_race(
@@ -208,7 +209,7 @@ def create_bar_race(df, bars_visible):
         bar_label_size=18,
         tick_label_size=22,
         period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
-        period_fmt='%b %-d, %Y -- %I:%M %p',
+        period_fmt='%b %-d, %Y\n%I:%M %p',
         # period_summary_func=lambda v, r: {
         #     'x': .70,
         #     'y': .15,
