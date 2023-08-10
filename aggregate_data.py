@@ -189,15 +189,15 @@ def create_bar_race(df, bars_visible):
         df,
         filename=os.path.join(BAR_RACE_VIDEOS_DIR, f"bar_race_{time_now}.mp4"),
         figsize=(16,9),
-        n_bars=10,
+        n_bars=16,
         dpi=120,
         interpolate_period=True,
-        period_length=1000,
-        steps_per_period=5, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
+        period_length=300,
+        steps_per_period=18, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
         filter_column_colors=True,
         shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black'},
-        bar_label_size=26,
-        tick_label_size=26,
+        bar_label_size=20,
+        tick_label_size=20,
         period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
         period_fmt='%Y-%m-%d -- %H:%I %p',
         # period_summary_func=lambda v, r: {
@@ -249,13 +249,13 @@ def main():
         all_file_data.append(data_dict_organised)
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
-    player_image_dir = scrape_player_images(unique_users_per_skill, "necromancy")
+    # player_image_dir = scrape_player_images(unique_users_per_skill, "necromancy")
     bars_visible = 10
     df = create_df(
         data=all_sorted_data,
         unique_users_per_skill=unique_users_per_skill,
         skill="necromancy",
-        use_each_n=50,
+        use_each_n=2,
         bars_visible=bars_visible
     )
     bar_race_video = create_bar_race(df, bars_visible=bars_visible,)
