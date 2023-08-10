@@ -2,6 +2,9 @@ import json
 import os
 import sys
 import pandas as pd
+import bar_chart_race as bcr
+from datetime import datetime
+
 
 RAW_DATA_DIR_PATH = "TEST_raw_scraped_data2"
 
@@ -42,31 +45,78 @@ def sort_all_data_by_date(all_file_data):
 
 def get_unique_users_per_skill(data: list[dict]) -> dict:
     unique_skills = list(data[0]["hiscores"].keys())
-    unique_users_per_skill = {f"{skill}": set() for skill in unique_skills} # dict of key:set pairs
-    print(unique_users_per_skill)
+    unique_users_per_skill = {skill: set() for skill in unique_skills} # dict of key:set pairs
 
     for data_point in data:
         for skill in unique_skills:
             try:
-                for user in data_point["hiscores"][f"{skill}"]:
-                    unique_users_per_skill[f"{skill}"].add(user["name"])
+                for user in data_point["hiscores"][skill]:
+                    unique_users_per_skill[skill].add(user["name"])
             except KeyError:
                 pass
     
-    print(unique_users_per_skill)
-    for k, v in unique_users_per_skill.items():
-        print(f"{k}: {len(v)} users")
+    # print(unique_users_per_skill)
+    # for k, v in unique_users_per_skill.items():
+    #     print(f"{k}: {len(v)} users")
 
     return unique_users_per_skill
 
 
-def create_df(data: list[dict]) -> pd.DataFrame:
-    # df = pd.DataFrame(
-    #     data={"hello": [1, 2]},
-    #     index=[3, 2]
-    # )
-    # return df
-    pass
+def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_each_n=None) -> pd.DataFrame:
+    """
+    Produce a dataframe to be used for the bar race video
+    index: date
+    column for each unique player. each row is their xp at a given time
+    their xp for each row is 0 unless they are recorded in the hiscores at that time
+    """
+    unique_players = unique_users_per_skill[skill]
+    # print(unique_players)
+    df = pd.DataFrame(
+        data=None,
+        columns=list(unique_players)
+    )
+
+    # iterate through the data points and determine if I want to use a certain data point
+    # based on the timestamp and the increment i specified
+    # if the data is empty for whatever reason, just duplicate the values from the last point
+    # for each data point I want to add a new row with the values given by the hiscores data
+    # add it with the index specified by the timestamp
+
+    def is_valid_frame(frame_num, num_frames):
+        """ determine if a given frame number is valid, given the value of use_each_n given to create_df"""
+        return (use_each_n is None) or (frame_num % use_each_n == 0) or (iter_count == num_frames-1)
+
+
+    for iter_count, data_point in enumerate(data):
+
+        if not is_valid_frame(iter_count, num_frames=len(data)):
+            continue
+
+        new_row = {player:0 for player in df.columns} # start all players as 0 xp per row
+        # check through the gathered data and add any matching xp values
+        this_date = data_point["timestamp"]
+        try:
+            this_hiscores_data = data_point["hiscores"][skill]
+        except KeyError: # if no data, skip this data_point
+            continue
+
+        for player in this_hiscores_data:
+            xp_int = player["score"].replace(",","")
+            new_row[player["name"]] = xp_int
+        new_row_df = pd.DataFrame(data=new_row, index=[this_date])
+        df = pd.concat([df, new_row_df])
+        print(this_date)
+
+    print(df)
+    return df
+
+
+def create_bar_race(df):
+    """
+    Create a bar chart race from the dataframe given
+    """
+    time_now = datetime.strftime(datetime.now(), "%Y-%m-%d_%H_%M_%S")
+
 
 
 def main():
@@ -80,13 +130,19 @@ def main():
         all_file_data.append(data_dict_organised)
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
+    df = create_df(
+        data=all_sorted_data,
+        unique_users_per_skill=unique_users_per_skill,
+        skill="necromancy",
+        use_each_n=50
+    )
 
     # df = create_df(all_sorted_data)
     # print(df)
 
-
+    # import pprint
     # for item in all_sorted_data:
-    #     print(item)
+    #     pprint.pprint(item)
     #     print()
     #     print()
     # print(len(all_sorted_data))
