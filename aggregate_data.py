@@ -151,7 +151,7 @@ def get_xp_per_level(xp_per_level_file_path) -> dict:
     return xp_per_level
 
 
-def create_bar_race(df, bars_visible, race_started_at, steps_per_period):
+def create_bar_race(df, bars_visible, race_started_at):
     """
     Create a bar chart race from the dataframe given
     """
@@ -167,37 +167,6 @@ def create_bar_race(df, bars_visible, race_started_at, steps_per_period):
                 break
         return level
 
-    
-    def get_time_since_start(start_time: datetime, curr_time: datetime) -> str:
-        td: timedelta = curr_time - start_time
-        td_days, seconds_in_hours = divmod(td.total_seconds(), (24*3600))
-        td_days = int(td_days)
-        td_hours = int(seconds_in_hours / 3600)
-
-        since_str = "Since Release"
-
-        if td_days > 1:
-            days_str = f"{td_days} Days & "
-        elif td_days == 1:
-            days_str = f"{td_days} Day & "
-        else:
-            days_str = ""
-
-        if td_hours == 1:
-            hours_str = f"{td_hours} Hour "
-        else:
-            hours_str = f"{td_hours} Hours "
-
-        return days_str + hours_str + since_str
-
-    # hours_tracker is used to display, eg, "10 Hours Since Release" on the video
-    hours_tracker = []
-    for i in range(df.shape[0]): # for each row in the df
-        time_str = get_time_since_start(start_time=race_started_at,curr_time=df.index[i])
-        for _ in range(steps_per_period):
-            hours_tracker.append(time_str)
-    hours_tracker = iter(hours_tracker) # so I can use the next() keyword on it
-
     def period_summary(values, ranks):
         highest_xp = values.nlargest(1).values[0]
         highest_level = get_level_from_xp(highest_xp)
@@ -210,8 +179,7 @@ def create_bar_race(df, bars_visible, race_started_at, steps_per_period):
             'va': 'center',
             'size': '30',
             'color': 'mediumblue',
-            's': f"""{next(hours_tracker)}
-                    Highest Level: {highest_level}
+            's': f"""Highest Level: {highest_level}
                     Top {bars_visible} Combined XP: {sum_of_visible_xp}"""
         }
 
@@ -224,12 +192,12 @@ def create_bar_race(df, bars_visible, race_started_at, steps_per_period):
         n_bars=10,
         dpi=120,
         interpolate_period=True,
-        period_length=200,
-        steps_per_period=steps_per_period, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
+        period_length=1000,
+        steps_per_period=5, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
         filter_column_colors=True,
         shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black'},
-        bar_label_size=24,
-        tick_label_size=18,
+        bar_label_size=26,
+        tick_label_size=26,
         period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
         period_fmt='%Y-%m-%d -- %H:%I %p',
         # period_summary_func=lambda v, r: {
@@ -262,7 +230,7 @@ def main():
         data=all_sorted_data,
         unique_users_per_skill=unique_users_per_skill,
         skill="necromancy",
-        use_each_n=None,
+        use_each_n=50,
         bars_visible=bars_visible
     )
     # df_transposed = df
@@ -270,7 +238,7 @@ def main():
     # df_transposed.to_csv("df2.csv") # for Flourish
     necromancy_release_time = datetime.strptime("2023-08-07 12-00-00", "%Y-%m-%d %H-%M-%S")
     print(necromancy_release_time)
-    bar_race_video = create_bar_race(df, bars_visible=bars_visible, race_started_at=necromancy_release_time, steps_per_period=6)
+    bar_race_video = create_bar_race(df, bars_visible=bars_visible, race_started_at=necromancy_release_time)
     print(time.time() - t1)
 
     # df = create_df(all_sorted_data)
