@@ -6,7 +6,13 @@ import bar_chart_race as bcr
 from datetime import datetime
 
 
-RAW_DATA_DIR_PATH = "TEST_raw_scraped_data2"
+if os.environ.get("DEBUG") == "false": # if in production
+    debug_prefix = ""
+else:
+    debug_prefix = "TEST_"
+
+BAR_RACE_VIDEOS_DIR = f"{debug_prefix}bar_races"
+RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data2"
 
 
 def get_full_file_path(raw_data_dir_path, file_name):
@@ -87,25 +93,39 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_ea
         return (use_each_n is None) or (frame_num % use_each_n == 0) or (iter_count == num_frames-1)
 
 
+    # TODO - set each player's xp value to 1 less than the 10th
+    # (or however many rows are visible on the eventual chart) highest xp value in the previous row
+    # maybe also increase every player's xp by N xp per row, so the values are always increasing (not static)
+    prev_row = {player:0 for player in df.columns}
     for iter_count, data_point in enumerate(data):
 
+        new_row = prev_row # start all players with the same xp as their previous row
         if not is_valid_frame(iter_count, num_frames=len(data)):
             continue
 
-        new_row = {player:0 for player in df.columns} # start all players as 0 xp per row
         # check through the gathered data and add any matching xp values
-        this_date = data_point["timestamp"]
+        this_date = datetime.strptime(data_point["timestamp"], "%Y-%m-%d %H:%M:%S")
+        print(this_date)
         try:
             this_hiscores_data = data_point["hiscores"][skill]
         except KeyError: # if no data, skip this data_point
             continue
 
         for player in this_hiscores_data:
-            xp_int = player["score"].replace(",","")
+            xp_int = int(player["score"].replace(",",""))
             new_row[player["name"]] = xp_int
+
+        # add the row to the main dataframe
         new_row_df = pd.DataFrame(data=new_row, index=[this_date])
         df = pd.concat([df, new_row_df])
+
+        prev_row = new_row # for the next iteration
+
         print(this_date)
+
+    # Convert all columns to numeric dtype
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
 
     print(df)
     return df
@@ -116,10 +136,36 @@ def create_bar_race(df):
     Create a bar chart race from the dataframe given
     """
     time_now = datetime.strftime(datetime.now(), "%Y-%m-%d_%H_%M_%S")
-
+    print(os.path.join(BAR_RACE_VIDEOS_DIR, f"bar_race_{time_now}.mp4"))
+    bcr.bar_chart_race(
+        df,
+        filename=os.path.join(BAR_RACE_VIDEOS_DIR, f"bar_race_{time_now}.mp4"),
+        figsize=(16,9),
+        n_bars=10,
+        dpi=120,
+        interpolate_period=True,
+        period_length=400,
+        steps_per_period=12, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
+        filter_column_colors=True,
+        shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black', 'size': '14'},
+        period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '20', 'color': 'dimgray'},
+        period_fmt="%b %-d %Y - %H:%m",
+        period_summary_func=lambda v, r: {
+            'x': .70,
+            'y': .15,
+            'ha': 'right',
+            'va': 'center',
+            's': f"""Total value: {v.nlargest(10).sum():,.0f}\n
+                        Hello Chaps"""
+        }
+    )
 
 
 def main():
+    import time
+    t1 = time.time()
+    print(t1)
+    print(time.time() - t1)
     all_file_data = []
     for file_name in os.listdir(RAW_DATA_DIR_PATH):
         if ".json" not in file_name:
@@ -134,8 +180,9 @@ def main():
         data=all_sorted_data,
         unique_users_per_skill=unique_users_per_skill,
         skill="necromancy",
-        use_each_n=50
+        use_each_n=4
     )
+    bar_race_video = create_bar_race(df)
 
     # df = create_df(all_sorted_data)
     # print(df)
