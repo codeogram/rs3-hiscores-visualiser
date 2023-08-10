@@ -15,6 +15,7 @@ BAR_RACE_VIDEOS_DIR = f"{debug_prefix}bar_races"
 RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data2"
 HELPER_FILES_DIR_PATH = "helper_files"
 ALL_PLAYER_IMAGES_DIR = f"{debug_prefix}player_images"
+BANNED_USERS_PATH = "banned_users.txt"
 
 
 def get_full_file_path(raw_data_dir_path, file_name):
@@ -71,7 +72,19 @@ def get_unique_users_per_skill(data: list[dict]) -> dict:
     return unique_users_per_skill
 
 
-def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, banned_users: list, use_each_n=None, bars_visible=10) -> pd.DataFrame:
+def get_banned_users():
+    with open(BANNED_USERS_PATH, "r", encoding="utf-8") as f:
+        banned_users = []
+        reader = f.readlines()
+        for line in reader:
+            if (stripped_line := line.strip()):
+                banned_users.append(stripped_line)
+        if not banned_users:
+            banned_users = None
+    return banned_users
+
+
+def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_each_n=None, bars_visible=10) -> pd.DataFrame:
     """
     Produce a dataframe to be used for the bar race video
     index: date
@@ -83,6 +96,8 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, banned
         data=None,
         columns=list(unique_players)
     )
+    banned_users = get_banned_users()
+    num_banned_users = 0 if not banned_users else len(banned_users)
 
     # iterate through the data points and determine if I want to use a certain data point
     # based on the timestamp and the increment i specified
@@ -111,7 +126,7 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, banned
         for player in this_hiscores_data:
             xp_int = int(player["score"].replace(",",""))
             new_row[player["name"]] = xp_int
-            if player["rank"] == str(bars_visible+len(banned_users)): # +len(banned_users) in case the banned users would have been ranked above
+            if player["rank"] == str(bars_visible+num_banned_users): # num_banned_users in case the banned users would have been ranked above
                 lowest_visible_xp = xp_int
 
         sorted_xp_values_desc = sorted(new_row.values(), reverse=True)
@@ -174,7 +189,7 @@ def create_bar_race(df, bars_visible):
             'size': '30',
             'color': 'mediumblue',
             's': f"""Highest Level: {highest_level}
-                    Top {bars_visible} Combined XP: {sum_of_visible_xp}"""
+                    Highest XP: {highest_xp}"""
         }
 
 
@@ -251,7 +266,6 @@ def main():
         skill="necromancy",
         use_each_n=20,
         bars_visible=bars_visible,
-        banned_users=["Iron TNT", "T Y T S"]
     )
     bar_race_video = create_bar_race(df, bars_visible=bars_visible,)
     print(time.time() - t1)
