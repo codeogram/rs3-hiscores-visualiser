@@ -1,9 +1,8 @@
 import json
 import os
-import sys
 import pandas as pd
 import bar_chart_race as bcr
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 if os.environ.get("DEBUG") == "false": # if in production
@@ -12,9 +11,9 @@ else:
     debug_prefix = "TEST_"
 
 BAR_RACE_VIDEOS_DIR = f"{debug_prefix}bar_races"
-RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data2"
+RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data4"
 HELPER_FILES_DIR_PATH = "helper_files"
-ALL_PLAYER_IMAGES_DIR = f"{debug_prefix}player_images"
+# ALL_PLAYER_IMAGES_DIR = f"{debug_prefix}player_images" # have scrapped this for now
 BANNED_USERS_PATH = "banned_users.txt"
 
 
@@ -32,7 +31,6 @@ def get_data_from_json_file(full_file_path) -> dict|None:
 
 
 def organise_dict_data(file_content_dict):
-    # TODO - remove bug abusers (by name) from the data
     if file_content_dict["data"]: # if not an empty list
         hiscores_data = {}
         for hiscores_item in file_content_dict["data"]:
@@ -64,10 +62,6 @@ def get_unique_users_per_skill(data: list[dict]) -> dict:
                     unique_users_per_skill[skill].add(user["name"])
             except KeyError:
                 pass
-    
-    # print(unique_users_per_skill)
-    # for k, v in unique_users_per_skill.items():
-    #     print(f"{k}: {len(v)} users")
 
     return unique_users_per_skill
 
@@ -99,16 +93,9 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_ea
     banned_users = get_banned_users()
     num_banned_users = 0 if not banned_users else len(banned_users)
 
-    # iterate through the data points and determine if I want to use a certain data point
-    # based on the timestamp and the increment i specified
-    # if the data is empty for whatever reason, just duplicate the values from the last point
-    # for each data point I want to add a new row with the values given by the hiscores data
-    # add it with the index specified by the timestamp
-
     def is_valid_frame(frame_num, num_frames):
         """ determine if a given frame number is valid, given the value of use_each_n given to create_df"""
         return (use_each_n is None) or (frame_num % use_each_n == 0) or (iter_count == num_frames-1)
-
 
     lowest_visible_xp = 1 # start at 1 so lowest_visible_xp-1 = 0
     for iter_count, data_point in enumerate(data):
@@ -187,11 +174,7 @@ def create_bar_race(df, bars_visible):
             'va': 'center',
             'size': '30',
             'color': 'mediumblue',
-            's': f"""Current Leader: {ranks[0]}
-            Current Leader: {values.nlargest(1)[0]}
-            Current Leader: {values.nlargest(1)[0].column}
-            Current Leader: {values.nlargest(1)[0].index}
-                    Leader Level: {highest_level}"""
+            's': f"""Highest Level: {highest_level}"""
         }
 
     time_now = datetime.strftime(datetime.now(), "%Y-%m-%d_%H_%M_%S")
@@ -202,27 +185,21 @@ def create_bar_race(df, bars_visible):
         n_bars=bars_visible,
         dpi=120,
         interpolate_period=True,
-        period_length=1000,
-        steps_per_period=30, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
+        period_length=300,
+        steps_per_period=18,
         filter_column_colors=True,
         shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black'},
         bar_label_size=18,
         tick_label_size=22,
-        period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
+        period_label={'x': .98, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '50', 'color': 'indianred'},
         period_fmt='%b %-d, %Y\n%I:%M %p',
-        # period_summary_func=lambda v, r: {
-        #     'x': .70,
-        #     'y': .15,
-        #     'ha': 'right',
-        #     'va': 'center',
-        #     's': f"""Highest level: {v.nlargest(1)}\n
-        #             Total value: {v.nlargest(10).sum():,.0f}"""
-        # }
-        period_summary_func=period_summary
+        period_summary_func=period_summary,
+        title='Race to 200m Necromancy',
+        title_size=50
     )
 
 
-# getting player images
+# getting player images - SCRAPPED
 def scrape_player_images(unique_users_per_skill: dict, skill: str|None=None) -> str:
     import requests
 
@@ -241,8 +218,6 @@ def scrape_player_images(unique_users_per_skill: dict, skill: str|None=None) -> 
     urls_to_do = list(urls_to_do)
     print(urls_to_do)
     print(len(urls_to_do))
-
-
     return scraped_dir
 
 
@@ -259,7 +234,6 @@ def main():
         all_file_data.append(data_dict_organised)
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
-    # player_image_dir = scrape_player_images(unique_users_per_skill, "necromancy")
     bars_visible = 16
     df = create_df(
         data=all_sorted_data,
@@ -274,48 +248,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-
-
-"""
-all_file_data = [
-    {
-        "timestamp": <timestamp>,
-        "hiscores": [
-            <skill1>: {
-            
-            },
-            <skill2>: {
-            
-            }
-        ]
-    },
-    {
-        "timestamp": <timestamp>,
-        "hiscores": [
-            <skill1>: {
-            
-            },
-            <skill2>: {
-            
-            }
-        ]
-    },
-]
-"""
-
-# def get_dict_size(obj):
-#     size = sys.getsizeof(obj)
-    
-#     if isinstance(obj, dict):
-#         for value in obj.values():
-#             size += get_dict_size(value)
-#     elif isinstance(obj, list) or isinstance(obj, tuple):
-#         for item in obj:
-#             size += get_dict_size(item)
-#     elif isinstance(obj, str):
-#         size += sys.getsizeof(obj)
-    
-#     return size
-
-# print(get_dict_size((all_file_data)))
