@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import pandas as pd
 
 RAW_DATA_DIR_PATH = "TEST_raw_scraped_data2"
 
@@ -39,6 +40,35 @@ def sort_all_data_by_date(all_file_data):
     return sorted(all_file_data, key=lambda file_data: file_data["timestamp"])
 
 
+def get_unique_users_per_skill(data: list[dict]) -> dict:
+    unique_skills = list(data[0]["hiscores"].keys())
+    unique_users_per_skill = {f"{skill}": set() for skill in unique_skills} # dict of key:set pairs
+    print(unique_users_per_skill)
+
+    for data_point in data:
+        for skill in unique_skills:
+            try:
+                for user in data_point["hiscores"][f"{skill}"]:
+                    unique_users_per_skill[f"{skill}"].add(user["name"])
+            except KeyError:
+                pass
+    
+    print(unique_users_per_skill)
+    for k, v in unique_users_per_skill.items():
+        print(f"{k}: {len(v)} users")
+
+    return unique_users_per_skill
+
+
+def create_df(data: list[dict]) -> pd.DataFrame:
+    # df = pd.DataFrame(
+    #     data={"hello": [1, 2]},
+    #     index=[3, 2]
+    # )
+    # return df
+    pass
+
+
 def main():
     all_file_data = []
     for file_name in os.listdir(RAW_DATA_DIR_PATH):
@@ -49,12 +79,21 @@ def main():
         data_dict_organised = organise_dict_data(data_dict) if data_dict else data_dict
         all_file_data.append(data_dict_organised)
     all_sorted_data = sort_all_data_by_date(all_file_data)
+    unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
 
-    for item in all_sorted_data:
-        print(item)
-        print()
-        print()
-    print(len(all_sorted_data))
+    # df = create_df(all_sorted_data)
+    # print(df)
+
+
+    # for item in all_sorted_data:
+    #     print(item)
+    #     print()
+    #     print()
+    # print(len(all_sorted_data))
+
+
+
+
 
 if __name__ == "__main__":
     main()
