@@ -12,7 +12,7 @@ else:
     debug_prefix = "TEST_"
 
 BAR_RACE_VIDEOS_DIR = f"{debug_prefix}bar_races"
-RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data3"
+RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data2"
 HELPER_FILES_DIR_PATH = "helper_files"
 ALL_PLAYER_IMAGES_DIR = f"{debug_prefix}player_images"
 
@@ -96,12 +96,10 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_ea
 
 
     lowest_visible_xp = 1 # start at 1 so lowest_visible_xp-1 = 0
-    # max_visible_xp = 0
     for iter_count, data_point in enumerate(data):
-
         if not is_valid_frame(iter_count, num_frames=len(data)):
             continue
-
+        
         new_row = {player:lowest_visible_xp-1 for player in df.columns}
         # check through the gathered data and add any matching xp values
         this_date = datetime.strptime(data_point["timestamp"], "%Y-%m-%d %H:%M:%S")
@@ -113,18 +111,13 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_ea
         for player in this_hiscores_data:
             xp_int = int(player["score"].replace(",",""))
             new_row[player["name"]] = xp_int
-            # if player["rank"] == str(bars_visible):
-            #     lowest_visible_xp = xp_int
+            if player["rank"] == str(bars_visible):
+                lowest_visible_xp = xp_int
             # if player["rank"] == "1":
             #     max_visible_xp = xp_int
 
-        # increase each value by a little bit to keep the bars moving
-        increase_amt = 137
-        new_row = {k:(v+increase_amt) for k, v in new_row.items()}
         sorted_xp_values_desc = sorted(new_row.values(), reverse=True)
         lowest_visible_xp = sorted_xp_values_desc[bars_visible]
-        # print(lowest_visible_xp)
-        # max_visible_xp = sorted_xp_values_desc[0]
 
         # add the row to the main dataframe
         new_row_df = pd.DataFrame(data=new_row, index=[this_date])
@@ -192,14 +185,14 @@ def create_bar_race(df, bars_visible):
         n_bars=bars_visible,
         dpi=120,
         interpolate_period=True,
-        period_length=300,
-        steps_per_period=18, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
+        period_length=1000,
+        steps_per_period=30, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
         filter_column_colors=True,
         shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black'},
         bar_label_size=20,
         tick_label_size=20,
         period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
-        period_fmt='%Y-%m-%d -- %H:%I %p',
+        period_fmt='%Y-%m-%d -- %I:%M %p',
         # period_summary_func=lambda v, r: {
         #     'x': .70,
         #     'y': .15,
@@ -250,12 +243,12 @@ def main():
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
     # player_image_dir = scrape_player_images(unique_users_per_skill, "necromancy")
-    bars_visible = 16
+    bars_visible = 10
     df = create_df(
         data=all_sorted_data,
         unique_users_per_skill=unique_users_per_skill,
         skill="necromancy",
-        use_each_n=2,
+        use_each_n=20,
         bars_visible=bars_visible
     )
     bar_race_video = create_bar_race(df, bars_visible=bars_visible,)
