@@ -71,7 +71,7 @@ def get_unique_users_per_skill(data: list[dict]) -> dict:
     return unique_users_per_skill
 
 
-def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_each_n=None, bars_visible=10) -> pd.DataFrame:
+def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, banned_users: list, use_each_n=None, bars_visible=10) -> pd.DataFrame:
     """
     Produce a dataframe to be used for the bar race video
     index: date
@@ -79,7 +79,6 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_ea
     their xp for each row is 0 unless they are recorded in the hiscores at that time
     """
     unique_players = unique_users_per_skill[skill]
-    # print(unique_players)
     df = pd.DataFrame(
         data=None,
         columns=list(unique_players)
@@ -112,18 +111,14 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_ea
         for player in this_hiscores_data:
             xp_int = int(player["score"].replace(",",""))
             new_row[player["name"]] = xp_int
-            if player["rank"] == str(bars_visible):
+            if player["rank"] == str(bars_visible+len(banned_users)): # +len(banned_users) in case the banned users would have been ranked above
                 lowest_visible_xp = xp_int
-            # if player["rank"] == "1":
-            #     max_visible_xp = xp_int
 
         sorted_xp_values_desc = sorted(new_row.values(), reverse=True)
         lowest_visible_xp = sorted_xp_values_desc[bars_visible]
 
         # add the row to the main dataframe
         new_row_df = pd.DataFrame(data=new_row, index=[this_date])
-        # print(new_row_df.iloc[-1]["Glue"])
-
         df = pd.concat([df, new_row_df])
 
         print(this_date)
@@ -131,6 +126,11 @@ def create_df(data: list[dict], unique_users_per_skill: dict, skill: str, use_ea
     # Convert all columns to numeric dtype
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # delete banned users
+    if banned_users:
+        for user in banned_users:
+            df = df.drop([user], axis=1)
 
     print(df)
     return df
@@ -193,7 +193,7 @@ def create_bar_race(df, bars_visible):
         bar_label_size=18,
         tick_label_size=22,
         period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
-        period_fmt='%Y-%m-%d -- %I:%M %p',
+        period_fmt='%b %-d, %Y -- %I:%M %p',
         # period_summary_func=lambda v, r: {
         #     'x': .70,
         #     'y': .15,
@@ -250,7 +250,8 @@ def main():
         unique_users_per_skill=unique_users_per_skill,
         skill="necromancy",
         use_each_n=20,
-        bars_visible=bars_visible
+        bars_visible=bars_visible,
+        banned_users=["Iron TNT", "T Y T S"]
     )
     bar_race_video = create_bar_race(df, bars_visible=bars_visible,)
     print(time.time() - t1)
