@@ -3,7 +3,7 @@ import os
 import sys
 import pandas as pd
 import bar_chart_race as bcr
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 if os.environ.get("DEBUG") == "false": # if in production
@@ -147,12 +147,11 @@ def get_xp_per_level(xp_per_level_file_path) -> dict:
         reader = csv.DictReader(f)
         xp_per_level = {}
         for row in reader:
-            print(row)
             xp_per_level[row["Level"]] = int(row["XP"].replace(",",""))
     return xp_per_level
 
 
-def create_bar_race(df):
+def create_bar_race(df, bars_visible, race_started_at, steps_per_period):
     """
     Create a bar chart race from the dataframe given
     """
@@ -168,8 +167,56 @@ def create_bar_race(df):
                 break
         return level
 
+    
+    def get_time_since_start(start_time: datetime, curr_time: datetime) -> str:
+        td: timedelta = curr_time - start_time
+        td_days, seconds_in_hours = divmod(td.total_seconds(), (24*3600))
+        td_days = int(td_days)
+        td_hours = int(seconds_in_hours / 3600)
+
+        since_str = "Since Release"
+
+        if td_days > 1:
+            days_str = f"{td_days} Days & "
+        elif td_days == 1:
+            days_str = f"{td_days} Day & "
+        else:
+            days_str = ""
+
+        if td_hours == 1:
+            hours_str = f"{td_hours} Hour "
+        else:
+            hours_str = f"{td_hours} Hours "
+
+        return days_str + hours_str + since_str
+
+    # hours_tracker is used to display, eg, "10 Hours Since Release" on the video
+    hours_tracker = []
+    for i in range(df.shape[0]): # for each row in the df
+        time_str = get_time_since_start(start_time=race_started_at,curr_time=df.index[i])
+        for _ in range(steps_per_period):
+            hours_tracker.append(time_str)
+    hours_tracker = iter(hours_tracker) # so I can use the next() keyword on it
+
+    def period_summary(values, ranks):
+        highest_xp = values.nlargest(1).values[0]
+        highest_level = get_level_from_xp(highest_xp)
+        sum_of_visible_xp = f"{values.nlargest(bars_visible).sum():,.0f}"
+        # time_since_release = get_time_since_start(start_time=race_started_at, curr_time=values.index)
+        return {
+            'x': .98,
+            'y': .12,
+            'ha': 'right',
+            'va': 'center',
+            'size': '30',
+            'color': 'mediumblue',
+            's': f"""{next(hours_tracker)}
+                    Highest Level: {highest_level}
+                    Top {bars_visible} Combined XP: {sum_of_visible_xp}"""
+        }
+
+
     time_now = datetime.strftime(datetime.now(), "%Y-%m-%d_%H_%M_%S")
-    print(os.path.join(BAR_RACE_VIDEOS_DIR, f"bar_race_{time_now}.mp4"))
     bcr.bar_chart_race(
         df,
         filename=os.path.join(BAR_RACE_VIDEOS_DIR, f"bar_race_{time_now}.mp4"),
@@ -177,21 +224,23 @@ def create_bar_race(df):
         n_bars=10,
         dpi=120,
         interpolate_period=True,
-        period_length=500,
-        steps_per_period=15, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
+        period_length=200,
+        steps_per_period=steps_per_period, # fps = steps_per_period * 10 (default fps is 20, aka steps_per_period is 10)
         filter_column_colors=True,
-        shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black', 'size': '28'},
-        bar_label_size=18,
+        shared_fontdict={'family': 'RuneScape Bold Font', 'weight': 'bold', 'color': 'black'},
+        bar_label_size=24,
         tick_label_size=18,
         period_label={'x': .70, 'y': .25, 'ha': 'right', 'va': 'center', 'size': '30', 'color': 'dimgray'},
-        period_summary_func=lambda v, r: {
-            'x': .70,
-            'y': .15,
-            'ha': 'right',
-            'va': 'center',
-            's': f"""Highest level: {v.nlargest(1)}\n
-                    Total value: {v.nlargest(10).sum():,.0f}"""
-        }
+        period_fmt='%Y-%m-%d -- %H:%I %p',
+        # period_summary_func=lambda v, r: {
+        #     'x': .70,
+        #     'y': .15,
+        #     'ha': 'right',
+        #     'va': 'center',
+        #     's': f"""Highest level: {v.nlargest(1)}\n
+        #             Total value: {v.nlargest(10).sum():,.0f}"""
+        # }
+        period_summary_func=period_summary
     )
 
 
@@ -208,17 +257,20 @@ def main():
         all_file_data.append(data_dict_organised)
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
+    bars_visible = 10
     df = create_df(
         data=all_sorted_data,
         unique_users_per_skill=unique_users_per_skill,
         skill="necromancy",
-        use_each_n=8,
-        bars_visible=10
+        use_each_n=None,
+        bars_visible=bars_visible
     )
     # df_transposed = df
     # df_transposed = df.transpose()
     # df_transposed.to_csv("df2.csv") # for Flourish
-    bar_race_video = create_bar_race(df)
+    necromancy_release_time = datetime.strptime("2023-08-07 12-00-00", "%Y-%m-%d %H-%M-%S")
+    print(necromancy_release_time)
+    bar_race_video = create_bar_race(df, bars_visible=bars_visible, race_started_at=necromancy_release_time, steps_per_period=6)
     print(time.time() - t1)
 
     # df = create_df(all_sorted_data)
