@@ -152,7 +152,7 @@ def get_xp_per_level(xp_per_level_file_path) -> dict:
     return xp_per_level
 
 
-def create_bar_race(df, bars_visible, race_started_at):
+def create_bar_race(df, bars_visible):
     """
     Create a bar chart race from the dataframe given
     """
@@ -172,7 +172,6 @@ def create_bar_race(df, bars_visible, race_started_at):
         highest_xp = values.nlargest(1).values[0]
         highest_level = get_level_from_xp(highest_xp)
         sum_of_visible_xp = f"{values.nlargest(bars_visible).sum():,.0f}"
-        # time_since_release = get_time_since_start(start_time=race_started_at, curr_time=values.index)
         return {
             'x': .98,
             'y': .12,
@@ -251,23 +250,15 @@ def main():
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
     player_image_dir = scrape_player_images(unique_users_per_skill, "necromancy")
-
-
-
-
-    # bars_visible = 10
-    # df = create_df(
-    #     data=all_sorted_data,
-    #     unique_users_per_skill=unique_users_per_skill,
-    #     skill="necromancy",
-    #     use_each_n=50,
-    #     bars_visible=bars_visible
-    # )
-
-
-    # necromancy_release_time = datetime.strptime("2023-08-07 12-00-00", "%Y-%m-%d %H-%M-%S")
-    # print(necromancy_release_time)
-    # bar_race_video = create_bar_race(df, bars_visible=bars_visible, race_started_at=necromancy_release_time)
+    bars_visible = 10
+    df = create_df(
+        data=all_sorted_data,
+        unique_users_per_skill=unique_users_per_skill,
+        skill="necromancy",
+        use_each_n=50,
+        bars_visible=bars_visible
+    )
+    bar_race_video = create_bar_race(df, bars_visible=bars_visible,)
     print(time.time() - t1)
 
 
