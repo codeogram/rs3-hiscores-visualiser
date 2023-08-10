@@ -12,8 +12,9 @@ else:
     debug_prefix = "TEST_"
 
 BAR_RACE_VIDEOS_DIR = f"{debug_prefix}bar_races"
-RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data2"
+RAW_DATA_DIR_PATH = f"{debug_prefix}raw_scraped_data3"
 HELPER_FILES_DIR_PATH = "helper_files"
+ALL_PLAYER_IMAGES_DIR = f"{debug_prefix}player_images"
 
 
 def get_full_file_path(raw_data_dir_path, file_name):
@@ -212,6 +213,30 @@ def create_bar_race(df, bars_visible, race_started_at):
     )
 
 
+# getting player images
+def scrape_player_images(unique_users_per_skill: dict, skill: str|None=None) -> str:
+    import requests
+
+    time_now = datetime.utcnow().strftime('%Y-%m-%d_%H_%M_%S')
+    scraped_dir = os.path.join(ALL_PLAYER_IMAGES_DIR, f"images_{time_now}")
+
+    # iterate through unique_users_per_skill
+    urls_to_do = set() # set, to ensure uniques
+    if skill:
+        for player in unique_users_per_skill[skill]:
+            urls_to_do.add(f"https://secure.runescape.com/m=hiscore/compare?user1={player.replace(' ', '%20')}")
+    else:
+        for skill, players in unique_users_per_skill.items():
+            for player in players:
+                urls_to_do.add(f"https://secure.runescape.com/m=hiscore/compare?user1={player.replace(' ', '%20')}")
+    urls_to_do = list(urls_to_do)
+    print(urls_to_do)
+    print(len(urls_to_do))
+
+
+    return scraped_dir
+
+
 def main():
     import time
     t1 = time.time()    
@@ -225,34 +250,25 @@ def main():
         all_file_data.append(data_dict_organised)
     all_sorted_data = sort_all_data_by_date(all_file_data)
     unique_users_per_skill = get_unique_users_per_skill(all_sorted_data)
-    bars_visible = 10
-    df = create_df(
-        data=all_sorted_data,
-        unique_users_per_skill=unique_users_per_skill,
-        skill="necromancy",
-        use_each_n=50,
-        bars_visible=bars_visible
-    )
-    # df_transposed = df
-    # df_transposed = df.transpose()
-    # df_transposed.to_csv("df2.csv") # for Flourish
-    necromancy_release_time = datetime.strptime("2023-08-07 12-00-00", "%Y-%m-%d %H-%M-%S")
-    print(necromancy_release_time)
-    bar_race_video = create_bar_race(df, bars_visible=bars_visible, race_started_at=necromancy_release_time)
+    player_image_dir = scrape_player_images(unique_users_per_skill, "necromancy")
+
+
+
+
+    # bars_visible = 10
+    # df = create_df(
+    #     data=all_sorted_data,
+    #     unique_users_per_skill=unique_users_per_skill,
+    #     skill="necromancy",
+    #     use_each_n=50,
+    #     bars_visible=bars_visible
+    # )
+
+
+    # necromancy_release_time = datetime.strptime("2023-08-07 12-00-00", "%Y-%m-%d %H-%M-%S")
+    # print(necromancy_release_time)
+    # bar_race_video = create_bar_race(df, bars_visible=bars_visible, race_started_at=necromancy_release_time)
     print(time.time() - t1)
-
-    # df = create_df(all_sorted_data)
-    # print(df)
-
-    # import pprint
-    # for item in all_sorted_data:
-    #     pprint.pprint(item)
-    #     print()
-    #     print()
-    # print(len(all_sorted_data))
-
-
-
 
 
 if __name__ == "__main__":
