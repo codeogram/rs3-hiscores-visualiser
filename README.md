@@ -55,3 +55,5 @@ For example, I used it to create a visualisation of the **Race to 200m Necromanc
 - Although **graph.py** takes no additional command-line arguments, you can still modify the styling of the bar chart race by changing the values of the keyword arguments in the `bcr.bar_chart_race()` function call, inside the script. Note the default values as laid out in the script: you may wish to modify these depending on what data you are illustrating.
 
 - If you do not have the RuneScape font installed on your system, you can either install it and proceed, or remove the selected font from `bcr.bar_chart_race()`.
+
+- If there are specific users you wish to exclude from your bar chart race (for example, if they were bug-abusing XP), create a **banned_users.txt** file and place it in **helper_files/**. In the text file, list each banned player on a new line (case sensitive), and they will be excluded from the final bar chart race.
