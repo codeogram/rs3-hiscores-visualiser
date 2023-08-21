@@ -4,7 +4,7 @@ Functionality for scraping the RuneScape 3 Hiscores, using the [official Hiscore
 
 For example, I used it to create a visualisation of the **Race to 200m Necromancy**, which began on 7th August 2023 and lasted 5 days.
 
-![bar_chart_race_example](https://github.com/codeogram/rs-hiscores-scraper/assets/87808600/eb7c6281-b0a2-42d4-9e8e-83fece1907d3)
+![bar_chart_race_example](https://github.com/codeogram/rs3-hiscores-visualiser/assets/87808600/c6d9c335-84c4-40b6-86cd-0f14e5e5a5f3)
 
 ---
 
