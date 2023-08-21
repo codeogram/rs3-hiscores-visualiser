@@ -1,0 +1,122 @@
+[
+    {
+        "skill": "overall",
+        "table": 0
+    },
+    {
+        "skill": "attack",
+        "table": 1
+    },
+    {
+        "skill": "defence",
+        "table": 2
+    },
+    {
+        "skill": "strength",
+        "table": 3
+    },
+    {
+        "skill": "constitution",
+        "table": 4
+    },
+    {
+        "skill": "ranged",
+        "table": 5
+    },
+    {
+        "skill": "prayer",
+        "table": 6
+    },
+    {
+        "skill": "magic",
+        "table": 7
+    },
+    {
+        "skill": "cooking",
+        "table": 8
+    },
+    {
+        "skill": "woodcutting",
+        "table": 9
+    },
+    {
+        "skill": "fletching",
+        "table": 10
+    },
+    {
+        "skill": "fishing",
+        "table": 11
+    },
+    {
+        "skill": "firemaking",
+        "table": 12
+    },
+    {
+        "skill": "crafting",
+        "table": 13
+    },
+    {
+        "skill": "smithing",
+        "table": 14
+    },
+    {
+        "skill": "mining",
+        "table": 15
+    },
+    {
+        "skill": "herblore",
+        "table": 16
+    },
+    {
+        "skill": "agility",
+        "table": 17
+    },
+    {
+        "skill": "thieving",
+        "table": 18
+    },
+    {
+        "skill": "slayer",
+        "table": 19
+    },
+    {
+        "skill": "farming",
+        "table": 20
+    },
+    {
+        "skill": "runecrafting",
+        "table": 21
+    },
+    {
+        "skill": "hunter",
+        "table": 22
+    },
+    {
+        "skill": "construction",
+        "table": 23
+    },
+    {
+        "skill": "summoning",
+        "table": 24
+    },
+    {
+        "skill": "dungeoneering",
+        "table": 25
+    },
+    {
+        "skill": "divination",
+        "table": 26
+    },
+    {
+        "skill": "invention",
+        "table": 27
+    },
+    {
+        "skill": "archaeology",
+        "table": 28
+    },
+    {
+        "skill": "necromancy",
+        "table": 29
+    }
+]
