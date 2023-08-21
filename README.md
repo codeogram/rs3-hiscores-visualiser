@@ -43,7 +43,8 @@ For example, I used it to create a visualisation of the **Race to 200m Necromanc
 - Run **scrape.py** to gather a collection of data over a period of time:
 
   `python scrape.py <scrape_interval_in_mins> [specified_skills]`<br>
-  **example usage** - _python scrape.py 5 mining woodcutting necromancy_ - "every 5 minutes, scrape the Mining, Woodcutting and Necromancy hiscores"<br>
+  **example usage** - _python scrape.py 5 mining woodcutting necromancy_
+
   Note: if no skills are specified, by default the _overall_ leaderboard will be scraped.
 
 - Once the raw data has been generated, use **graph.py** to use the data to create bar chart race:
