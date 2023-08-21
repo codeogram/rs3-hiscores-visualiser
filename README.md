@@ -51,7 +51,7 @@ For example, I used it to create a visualisation of the **Race to 200m Necromanc
 
   `python graph.py` (no additional arguments required)<br>
 
-### Additional Notes
+## Additional Notes
 
 - Although **graph.py** takes no additional command-line arguments, you can still modify the styling of the bar chart race by changing the values of the keyword arguments in the `bcr.bar_chart_race()` function call, inside the script. Note the default values as laid out in the script: you may wish to modify these depending on what data you are illustrating.
 
